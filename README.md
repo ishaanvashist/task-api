@@ -1,5 +1,7 @@
 # Task API
 
+![CI](https://github.com/ishaanvashist/task-api/actions/workflows/ci.yml/badge.svg)
+
 A task management REST API built with Spring Boot, featuring layered architecture, input validation, centralized error handling, and full Docker/Compose support for containerized deployment.
 
 ## Tech Stack
@@ -19,6 +21,7 @@ A task management REST API built with Spring Boot, featuring layered architectur
 | POST   | `/api/tasks`                | Create a new task                     | 201 |
 | PUT    | `/api/tasks/{id}`          | Update an existing task               | 200 |
 | DELETE | `/api/tasks/{id}`          | Delete a task                         | 204 |
+| GET    | `/actuator/health`         | Health check (returns app status)     | 200 |
 
 All task fields: `id`, `title`, `description`, `completed`.
 
