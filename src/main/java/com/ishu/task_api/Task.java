@@ -1,14 +1,17 @@
 package com.ishu.task_api;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class Task {
 
     private Long id;
 
     @NotBlank(message = "Title cannot be blank")
+    @Size(max = 200, message = "Title cannot exceed 200 characters")
     private String title;
 
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
     private boolean completed;
 

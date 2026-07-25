@@ -7,6 +7,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -82,6 +83,64 @@ public class TaskControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/tasks/" + createdId))      // delete that real task
                 .andExpect(status().isNoContent());              // expect 204, from the @ResponseStatus fix
+    }
+
+    @Test
+    void createTask_withOversizedTitle_shouldReturn400() throws Exception {
+        String longTitle = "a".repeat(201);              // 201 chars — 1 over your 200 limit
+
+        String requestBody = """
+            {
+                "title": "%s",
+                "description": "Testing oversized title",
+                "completed": false
+            }
+            """.formatted(longTitle);
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());      // expect 400, from the new @Size constraint
+    }
+
+    @Test
+    void createTask_withMalformedJson_shouldReturn400() throws Exception {
+        String brokenJson = "{ this is not valid json }";  // deliberately broken
+
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(brokenJson))
+                .andExpect(status().isBadRequest());        // Spring's default behavior for unparseable JSON
+    }
+
+    @Test
+    void createTask_withDuplicateTitle_shouldSucceedWithDifferentIds() throws Exception {
+        String requestBody = """
+            {
+                "title": "Buy milk",
+                "description": "First one",
+                "completed": false
+            }
+            """;
+
+        // create first task
+        String firstResponse = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        // create second task, same title
+        String secondResponse = mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isCreated())            // both succeed — duplicates are valid
+                .andReturn().getResponse().getContentAsString();
+
+        Number firstId = com.jayway.jsonpath.JsonPath.read(firstResponse, "$.id");
+        Number secondId = com.jayway.jsonpath.JsonPath.read(secondResponse, "$.id");
+
+        assertNotEquals(firstId, secondId);                 // proves each gets its own real id
     }
 
 }

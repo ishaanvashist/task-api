@@ -23,6 +23,8 @@ A task management REST API built with Spring Boot, featuring layered architectur
 | DELETE | `/api/tasks/{id}`          | Delete a task                         | 204 |
 | GET    | `/actuator/health`         | Health check (returns app status)     | 200 |
 
+**Validation:** `title` is required, max 200 characters. `description` max 1000 characters.
+
 All task fields: `id`, `title`, `description`, `completed`.
 
 ## How to Run
