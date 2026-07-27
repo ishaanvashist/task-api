@@ -1,6 +1,21 @@
 services:
-  task-api:
+  task-api:                                              # your app container
     build: .
     ports:
       - "8080:8081"
-    # depends_on: db  (Postgres service added in Week 3)
+    depends_on:
+      - db                                                # wait for db to start first
+
+  db:                                                     # new: postgres container
+    image: postgres:16                                    # use official Postgres image, version 16
+    environment:                                          # settings passed to Postgres at startup
+      POSTGRES_DB: taskdb                                 # database name
+      POSTGRES_USER: taskuser                             # username
+      POSTGRES_PASSWORD: taskpass                         # password (fine for local dev)
+    ports:
+      - "5432:5432"                                       # map postgres port to your Mac
+    volumes:
+      - postgres_data:/var/lib/postgresql/data           # persist data across container restarts
+
+volumes:
+  postgres_data:                                          # named volume for persistent storage
