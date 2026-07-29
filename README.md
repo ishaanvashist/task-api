@@ -4,12 +4,16 @@
 
 A task management REST API built with Spring Boot, featuring layered architecture, input validation, centralized error handling, and full Docker/Compose support for containerized deployment.
 
+**Note:** Task data is now stored in a PostgreSQL database and survives application restarts (previously stored in-memory only).
+
 ## Tech Stack
 
 - Java 21
 - Spring Boot 4.1
 - Maven
 - Docker + Docker Compose
+- PostgreSQL
+- Spring Data JPA
 
 ## Endpoints
 ## Endpoints

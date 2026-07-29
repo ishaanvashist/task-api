@@ -1,10 +1,19 @@
 package com.ishu.task_api;
 
+import jakarta.persistence.Entity;                                                   // marks the class as a database entity
+import jakarta.persistence.GeneratedValue;                                           // for auto-generating id values
+import jakarta.persistence.GenerationType;                                           // for choosing the id generation strategy
+import jakarta.persistence.Id;                                                        // marks the primary key
+import jakarta.persistence.Table;                                                     // lets us specify the table name
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+@Entity                                                                              // "hey Hibernate, this is a database entity"
+@Table(name = "tasks")                                                                // maps to a table named 'tasks' (plural, standard convention)
 public class Task {
 
+    @Id                                                                              // this field is the primary key
+    @GeneratedValue(strategy = GenerationType.IDENTITY)                              // let the database auto-generate id values
     private Long id;
 
     @NotBlank(message = "Title cannot be blank")
@@ -13,6 +22,7 @@ public class Task {
 
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
+
     private boolean completed;
 
     public Task() {
