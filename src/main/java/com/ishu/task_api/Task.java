@@ -1,15 +1,12 @@
 package com.ishu.task_api;
 
-import jakarta.persistence.Entity;                                                   // marks the class as a database entity
-import jakarta.persistence.GeneratedValue;                                           // for auto-generating id values
-import jakarta.persistence.GenerationType;                                           // for choosing the id generation strategy
-import jakarta.persistence.Id;                                                        // marks the primary key
-import jakarta.persistence.Table;                                                     // lets us specify the table name
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Entity                                                                              // "hey Hibernate, this is a database entity"
-@Table(name = "tasks")                                                                // maps to a table named 'tasks' (plural, standard convention)
+@Table(name = "tasks", indexes = @Index(name = "idx_task_title", columnList = "title"))
+                                                              // maps to a table named 'tasks' (plural, standard convention)
 public class Task {
 
     @Id                                                                              // this field is the primary key

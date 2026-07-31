@@ -95,6 +95,15 @@ An ORM bridges two different worlds: Java thinks in objects (classes, fields, in
 
 In this project, JPA (the specification) and Hibernate (the actual implementation) act as the ORM layer, wrapped further by Spring Data JPA for even less boilerplate.
 
+### Database Indexes
+
+Added an index on the `title` column to speed up searches. Ran `EXPLAIN ANALYZE` to see how Postgres actually searches:
+
+- Without and even with the index present, Postgres used a **Sequential Scan** (checking every row) instead of the index, because the table is small (6 rows) — scanning directly is faster than using the index at this size.
+- This showed that indexes aren't automatically used just because they exist — Postgres estimates which approach is actually faster for the current amount of data, and chooses accordingly.
+- On a much larger table, the same query would likely switch to an **Index Scan** instead.
+
+
 ## Live Deployment
 
 Deployed on Render: https://task-api-tndd.onrender.com/api/tasks
