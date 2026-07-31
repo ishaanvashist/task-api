@@ -24,7 +24,10 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<Task> getAllTasks() {
+    public List<Task> getAllTasks(@RequestParam(required = false) String title) {
+        if (title != null) {
+            return taskService.getTasksByTitle(title);
+        }
         return taskService.getAllTasks();
     }
 

@@ -22,6 +22,11 @@ public class TaskService {
         return taskRepository.findAll();                                             // unchanged — findAll still returns a plain list
     }
 
+    public List<Task> getTasksByTitle(String title) {
+        logger.info("Fetching tasks with title: {}", title);
+        return taskRepository.findByTitle(title);
+    }
+
     public Task getTaskById(Long id) {
         logger.info("Fetching task with id: {}", id);
         return taskRepository.findById(id)                                           // findById now returns a "box" (Optional) instead of a task or null

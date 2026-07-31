@@ -16,7 +16,6 @@ A task management REST API built with Spring Boot, featuring layered architectur
 - Spring Data JPA
 
 ## Endpoints
-## Endpoints
 
 | Method | Path                      | Description                          | Success Status |
 |--------|----------------------------|---------------------------------------|-----------------|
@@ -26,6 +25,8 @@ A task management REST API built with Spring Boot, featuring layered architectur
 | PUT    | `/api/tasks/{id}`          | Update an existing task               | 200 |
 | DELETE | `/api/tasks/{id}`          | Delete a task                         | 204 |
 | GET    | `/actuator/health`         | Health check (returns app status)     | 200 |
+| GET    | `/api/tasks?title={title}` | Search tasks by exact title           | 200 |
+
 
 **Validation:** `title` is required, max 200 characters. `description` max 1000 characters.
 
