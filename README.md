@@ -103,6 +103,10 @@ Added an index on the `title` column to speed up searches. Ran `EXPLAIN ANALYZE`
 - This showed that indexes aren't automatically used just because they exist — Postgres estimates which approach is actually faster for the current amount of data, and chooses accordingly.
 - On a much larger table, the same query would likely switch to an **Index Scan** instead.
 
+### Testcontainers
+
+Integration tests now use Testcontainers to spin up a real, temporary PostgreSQL database automatically — no manual setup needed, and it works the same way locally and in CI.
+
 
 ## Live Deployment
 
