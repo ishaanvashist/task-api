@@ -5,23 +5,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest                          // boots your real, full Spring app for this test — no mocking
-@AutoConfigureMockMvc                    // gives us a MockMvc object to simulate real HTTP calls
+@SpringBootTest
+@AutoConfigureMockMvc
+@Testcontainers                                                       // tells JUnit "this test class uses Testcontainers"
 public class TaskControllerIntegrationTest {
 
+    @Container                                                        // marks this as a container to start before tests, stop after
+    static PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:16")                  // same Postgres version you're already using
+                    .withDatabaseName("taskdb")
+                    .withUsername("taskuser")
+                    .withPassword("taskpass");
+
+    @DynamicPropertySource                                            // lets us hand Spring the real address AFTER the container starts
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+
     @Autowired
-    private MockMvc mockMvc;              // simulates real HTTP requests, no real server actually started
+    private MockMvc mockMvc;
 
     @Test
     void getAllTasks_shouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/tasks"))             // real GET request to /api/tasks
-                .andExpect(status().isOk());           // expect 200
+        mockMvc.perform(get("/api/tasks"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -32,12 +52,12 @@ public class TaskControllerIntegrationTest {
                     "description": "Milk, eggs, bread",
                     "completed": false
                 }
-                """;                                    // real JSON, same as a real client would send
+                """;
 
-        mockMvc.perform(post("/api/tasks")              // real POST request
+        mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isCreated());        // expect 201, from the @ResponseStatus fix
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -48,18 +68,18 @@ public class TaskControllerIntegrationTest {
                     "description": "Missing title",
                     "completed": false
                 }
-                """;                                     // blank title — should trigger @NotBlank
+                """;
 
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isBadRequest());      // expect 400
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void getTaskById_whenNotFound_shouldReturn404() throws Exception {
-        mockMvc.perform(get("/api/tasks/9999"))           // id that doesn't exist
-                .andExpect(status().isNotFound());        // expect 404
+        mockMvc.perform(get("/api/tasks/9999"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -72,22 +92,22 @@ public class TaskControllerIntegrationTest {
                 }
                 """;
 
-        String response = mockMvc.perform(post("/api/tasks")   // create a real task first
+        String response = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andReturn()
                 .getResponse()
-                .getContentAsString();                          // get the real JSON response back
+                .getContentAsString();
 
-        Number createdId = com.jayway.jsonpath.JsonPath.read(response, "$.id"); // pull "id" out of that JSON
+        Number createdId = com.jayway.jsonpath.JsonPath.read(response, "$.id");
 
-        mockMvc.perform(delete("/api/tasks/" + createdId))      // delete that real task
-                .andExpect(status().isNoContent());              // expect 204, from the @ResponseStatus fix
+        mockMvc.perform(delete("/api/tasks/" + createdId))
+                .andExpect(status().isNoContent());
     }
 
     @Test
     void createTask_withOversizedTitle_shouldReturn400() throws Exception {
-        String longTitle = "a".repeat(201);              // 201 chars — 1 over your 200 limit
+        String longTitle = "a".repeat(201);
 
         String requestBody = """
             {
@@ -100,17 +120,17 @@ public class TaskControllerIntegrationTest {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isBadRequest());      // expect 400, from the new @Size constraint
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     void createTask_withMalformedJson_shouldReturn400() throws Exception {
-        String brokenJson = "{ this is not valid json }";  // deliberately broken
+        String brokenJson = "{ this is not valid json }";
 
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(brokenJson))
-                .andExpect(status().isBadRequest());        // Spring's default behavior for unparseable JSON
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -123,24 +143,22 @@ public class TaskControllerIntegrationTest {
             }
             """;
 
-        // create first task
         String firstResponse = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
-        // create second task, same title
         String secondResponse = mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isCreated())            // both succeed — duplicates are valid
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Number firstId = com.jayway.jsonpath.JsonPath.read(firstResponse, "$.id");
         Number secondId = com.jayway.jsonpath.JsonPath.read(secondResponse, "$.id");
 
-        assertNotEquals(firstId, secondId);                 // proves each gets its own real id
+        assertNotEquals(firstId, secondId);
     }
 
 }
