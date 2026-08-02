@@ -26,6 +26,8 @@ A task management REST API built with Spring Boot, featuring layered architectur
 | DELETE | `/api/tasks/{id}`          | Delete a task                         | 204 |
 | GET    | `/actuator/health`         | Health check (returns app status)     | 200 |
 | GET    | `/api/tasks?title={title}` | Search tasks by exact title           | 200 |
+| POST   | `/api/categories`          | Create a new category                 | 201 |
+| GET    | `/api/categories`          | Get all categories with task counts   | 200 |
 
 
 **Validation:** `title` is required, max 200 characters. `description` max 1000 characters.
@@ -106,6 +108,15 @@ Added an index on the `title` column to speed up searches. Ran `EXPLAIN ANALYZE`
 ### Testcontainers
 
 Integration tests now use Testcontainers to spin up a real, temporary PostgreSQL database automatically — no manual setup needed, and it works the same way locally and in CI.
+
+
+### Category Relationship
+
+Tasks can optionally belong to a Category (many-to-one, via a `category_id` foreign key). POST /api/categories creates a category; tasks can be created with a `category: { "id": ... }` field to link them. Fetching a task returns its full connected category (id + name) via a join, not just the raw id.
+
+### The N+1 Problem
+
+Fetching all categories along with their task counts naively caused 1 extra query per category on top of the initial list query (N+1) — confirmed via `spring.jpa.show-sql=true` logs, showing 2 separate queries for just 1 category. Fixed using a fetch join — a custom repository query with `LEFT JOIN FETCH` — combining categories and their tasks into a single query. After the fix, the same result came from just 1 query total, regardless of how many categories exist.
 
 
 ## Live Deployment

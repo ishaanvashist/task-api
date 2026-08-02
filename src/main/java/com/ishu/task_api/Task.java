@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity                                                                              // "hey Hibernate, this is a database entity"
 @Table(name = "tasks", indexes = @Index(name = "idx_task_title", columnList = "title"))
-                                                              // maps to a table named 'tasks' (plural, standard convention)
+// maps to a table named 'tasks' (plural, standard convention)
 public class Task {
 
     @Id                                                                              // this field is the primary key
@@ -21,6 +21,10 @@ public class Task {
     private String description;
 
     private boolean completed;
+
+    @ManyToOne                                                                       // many tasks can point to one category
+    @JoinColumn(name = "category_id")                                                // the actual foreign key column, on the tasks table
+    private Category category;
 
     public Task() {
     }
@@ -56,5 +60,13 @@ public class Task {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }
